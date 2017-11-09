@@ -1,10 +1,13 @@
+import json
+
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 HOST = '0.0.0.0'
 PORT = 9092
-TOPIC = 'test'
+TOPIC = 'clann'
 
+"""
 producer = KafkaProducer(bootstrap_servers=['{host}:{port}'.format(
     host=HOST, port=PORT)])
 
@@ -23,18 +26,28 @@ except KafkaError as e:
 print ("Toic ", record_metadata.topic)
 print ("Partition ", record_metadata.partition)
 print ("Offset", record_metadata.offset)
-
-# encode objects via msgpack
-# producer = KafkaProducer(value_serializer=msgpack.dumps)
-# producer.send(TOPIC, {'key': 'value'})
+"""
 
 # produce json messages
-# producer = KafkaProducer(bootstrap_servers=['{host}:{port}'.format(
-#    host=HOST, port=PORT)], 
-#    value_serializer=lambda m: json.dumps(m).encode('ascii'))
+producer = KafkaProducer(bootstrap_servers=['{host}:{port}'.format(
+    host=HOST, port=PORT)], 
+    value_serializer=lambda m: json.dumps(m).encode('ascii'))
 
 
-#producer.send(TOPIC, {'key': 'value'})
+future = producer.send(TOPIC, {'key': 'value'})
+
+try:
+    record_metadata = future.get(timeout=10)
+except KafkaError as e:
+    # Decide what to do if produce request failed...
+    # log.exception()
+    print("Error ", e)
+    pass
+
+print ("Topic ", record_metadata.topic)
+print ("Partition ", record_metadata.partition)
+print ("Offset", record_metadata.offset)
+
 
 # produce asynchronously
 #for _ in range(100):

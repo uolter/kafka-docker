@@ -1,11 +1,14 @@
+import json
 from kafka import KafkaConsumer
+import time
 
 HOST = '0.0.0.0'
 PORT = 9092
-TOPIC = 'test'
+TOPIC = 'clann'
 
 
 # To consume latest messages and auto-commit offsets
+"""
 consumer = KafkaConsumer(TOPIC,
                          group_id='my-group',
                          bootstrap_servers=['{host}:{port}'.format(host=HOST,port=PORT)])
@@ -15,12 +18,33 @@ for message in consumer:
     print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
                                           message.offset, message.key,
                                           message.value))
-
+"""
 # consume earliest available messages, don't commit offsets
 # KafkaConsumer(auto_offset_reset='earliest', enable_auto_commit=False)
 
 # consume json messages
-#consumer = KafkaConsumer(value_deserializer=lambda m: json.loads(m.decode('ascii')))
+for _ in range(3):
+  try:
+    consumer = KafkaConsumer(
+      TOPIC,
+      group_id='my-group',
+      bootstrap_servers=['{host}:{port}'.format(host=HOST,port=PORT)],
+      value_deserializer=lambda m: json.loads(m.decode('ascii')))
+
+    for message in consumer:
+      # message value and key are raw bytes -- decode if necessary!
+      # e.g., for unicode: `message.value.decode('utf-8')`
+      print ("%s:%d:%d: value=%s" % (message.topic, message.partition,
+                                            message.offset,
+                                            message.value))
+
+    break
+  except:
+    print("Connection error. Try to reconnect in 10 sec.")
+    time.sleep(10)
+
+
+
 
 # consume msgpack
 #KafkaConsumer(value_deserializer=msgpack.unpackb)
