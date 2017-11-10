@@ -8,36 +8,38 @@ HOST = '0.0.0.0'
 PORT = 9092
 TOPIC = 'clann'
 
+
 def show_help(script):
-    print('%s -i <inputfile>' %script)
+    print('%s -i <inputfile> -t <topic>' % script)
 
 
 def main(argv):
-
     if len(argv) < 2:
         show_help(argv[0])
         sys.exit(2)
 
     try:
-      opts, args = getopt.getopt(argv[1:], "hi:o:",["ifile=",])
+        opts, args = getopt.getopt(argv[1:], "hi:t:", ["ifile=", "topic="])
     except getopt.GetoptError:
-      show_help(argv[0])
-      sys.exit(2)
+        show_help(argv[0])
+        sys.exit(2)
 
     data = {}
-   
+
     for opt, arg in opts:
         if opt in ("-i", "--ifile"):
             inputfile = arg
-            with open(inputfile) as file: 
-                data = file.read() 
+            with open(inputfile) as file:
+                data = file.read()
+        elif opt in ("-t", "--topic"):
+            TOPIC = arg
         else:
             show_help(argv[0])
             sys.exit()
 
     # produce json messages
     producer = KafkaProducer(bootstrap_servers=['{host}:{port}'.format(
-        host=HOST, port=PORT)], 
+        host=HOST, port=PORT)],
         value_serializer=lambda m: json.dumps(m).encode('ascii'),
         retries=5)
 
@@ -55,7 +57,6 @@ def main(argv):
 
     # block until all async messages are sent
     producer.flush()
-
 
 
 if __name__ == "__main__":
